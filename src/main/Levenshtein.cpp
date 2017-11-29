@@ -244,10 +244,3 @@ int main (void)
 	end ();
 	return 0;
 }
-
-
-
-
-/*
-
-*/
