@@ -14,16 +14,21 @@
 //-----------------------------------MAIN---------------------------------------
 int main (void)
 {
-	init ();
-	computeScoreAndBacktrack();
+	Levenshtein::Computer computer;
+	std::string a,b;
+	getline(std::cin,a);
+	getline(std::cin,b);
+
+	computer.init (a,b);
+	computer.computeScoreAndBacktrack();
 
 #ifdef DEBUG
-	displayScore();
-	displayBackTrack();
+	computer.displayScore();
+	computer.displayBackTrack();
 #endif
 
-	std::cout << "Score:" << scoreBack[WIDTH-1][HEIGHT-1].score << std::endl;
-	displayAlignment();
-	end ();
+	std::cout << computer.GetLevenshteinDistance() << std::endl;
+	computer.displayAlignment();
+	computer.end ();
 	return 0;
 }
