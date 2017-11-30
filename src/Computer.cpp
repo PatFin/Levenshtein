@@ -5,35 +5,13 @@
 namespace Levenshtein
 {
 
-
-	void Computer::init (std::string& first, std::string& second)
+	void Computer::PrintScore (std::ostream& out)
 	{
-		a = first;
-		b = second;
-
-		WIDTH = a.length() + 1;
-		HEIGHT = b.length() + 1;
-
-		scoreBack = new Levenshtein::ScoreBack * [ WIDTH ];	//Score matrix
-		for (int i = 0; i < WIDTH; i++)
+		if ( !distanceComputed )
 		{
-			scoreBack [ i ] = new ScoreBack [ HEIGHT ];
+			computeScoreAndBacktrack();
 		}
-		scoreBack [0][0].score = 0;
-		scoreBack [0][0].back = ROOT;
-	}
 
-	void Computer::end ( )
-	{
-		for (int i = 0; i < WIDTH; i++)
-		{
-			delete[] scoreBack [ i ];
-		}
-		delete[] scoreBack;
-	}
-
-	void Levenshtein::Computer::displayScore ()
-	{
 		for (int i = 0; i < HEIGHT; i++)
 		{
 			for (int j = 0; j < WIDTH; j++)
@@ -44,8 +22,13 @@ namespace Levenshtein
 		}
 	}
 
-	void Levenshtein::Computer::displayBackTrack ()
+	void Computer::PrintBackTrack (std::ostream& out)
 	{
+		if ( !distanceComputed )
+		{
+			computeScoreAndBacktrack();
+		}
+
 		for (int i = 0; i < HEIGHT; i++)
 		{
 			for (int j = 0; j < WIDTH; j++)
@@ -56,7 +39,84 @@ namespace Levenshtein
 		}
 	}
 
-	void Levenshtein::Computer::computeScoreAndBacktrack ()
+	void Levenshtein::Computer::PrintAlignment (std::ostream& out)
+	{
+		if ( !distanceComputed )
+		{
+			computeScoreAndBacktrack();
+		}
+
+
+		if ( !alignmentComputed )
+		{	// If the string alignment was not already computed, it is done once
+			std::stack <char> action;
+			int i = WIDTH-1;
+			int j = HEIGHT-1;
+			while ( i != 0 || j != 0)
+			{
+				action.push(scoreBack[i][j].back);
+				//std::cout << action.top() << std::endl;
+				switch (action.top())
+				{
+					case Levenshtein::DIAGONAL:
+						i--;
+						j--;
+					break;
+					case Levenshtein::TOP :
+						j--;
+					break;
+					case Levenshtein::LEFT :
+						i--;
+					break;
+				}
+			}
+
+			stringOutputSize = action.size();
+#ifdef DEBUG
+			std::cerr << "Alignment length:" << action.size() << std::endl;
+#endif
+			firstAlignedString = new char [stringOutputSize];
+			secondAlignedString = new char [stringOutputSize];
+			int k = 0;
+
+			while ( !action.empty() )
+			{
+				switch (action.top())
+				{
+					case Levenshtein::DIAGONAL:
+						firstAlignedString[k] = a[i];
+						secondAlignedString[k] = b[j];
+						i++;
+						j++;
+					break;
+					case Levenshtein::TOP :
+						firstAlignedString[k] = '-';
+						secondAlignedString[k] = b[j];
+						j++;
+					break;
+					case Levenshtein::LEFT :
+						firstAlignedString[k] = a[i];
+						secondAlignedString[k] = '-';
+						i++;
+					break;
+				}
+				action.pop();
+				k++;
+			}
+		}
+
+		// Printing the string alignment
+		for (int z = 0; z < stringOutputSize; z++) {
+			out << firstAlignedString[z];
+		}
+		std::cout << std::endl;
+		for (int z = 0; z < stringOutputSize; z++) {
+			out << secondAlignedString[z];
+		}
+		out << std::endl;
+	}
+
+	void Computer::computeScoreAndBacktrack ()
 	{
 		int i; 		// ith column
 		int j;		// jth line
@@ -90,10 +150,10 @@ namespace Levenshtein
 				} else {
 					topLeft = scoreBack [i-1][j-1].score + MISMATCH_COST;
 				}
-				#ifdef DEBUG
-				std::cout << "Top:" << top << " Diag:" << topLeft << " Left:"
+#ifdef DEBUG
+				std::cerr << "Top:" << top << " Diag:" << topLeft << " Left:"
 						<< left;
-				#endif
+#endif
 				// Pick the highest value of them three
 				Backtrack back = TOP;
 				if ( left < top )
@@ -108,90 +168,58 @@ namespace Levenshtein
 				}
 				scoreBack [i][j].score = top;
 				scoreBack [i][j].back = back;
-				#ifdef DEBUG
-				std::cout << " BEST:" << scoreBack [i][j].score << " BACK:" <<
+#ifdef DEBUG
+				std::cerr << " BEST:" << scoreBack [i][j].score << " BACK:" <<
 						scoreBack[i][j].back << std::endl;
-				#endif
+#endif
 			}
 		}
 		distanceComputed = true;
 	}
 
-	void Levenshtein::Computer::displayAlignment ( )
-	{
-
-		std::stack <char> action;
-		int i = WIDTH-1;
-		int j = HEIGHT-1;
-		while ( i != 0 || j != 0)
-		{
-			action.push(scoreBack[i][j].back);
-			//std::cout << action.top() << std::endl;
-			switch (action.top())
-			{
-				case Levenshtein::DIAGONAL:
-					i--;
-					j--;
-				break;
-				case Levenshtein::TOP :
-					j--;
-				break;
-				case Levenshtein::LEFT :
-					i--;
-				break;
-			}
-		}
-
-		int stringOutputSize = action.size();
-	#ifdef DEBUG
-		std::cout << "Alignment length:" << action.size() << std::endl;
-	#endif
-		char x [stringOutputSize];
-		char y [stringOutputSize];
-		int k = 0;
-
-		while ( !action.empty() )
-		{
-			switch (action.top())
-			{
-				case Levenshtein::DIAGONAL:
-					x[k] = a[i];
-					y[k] = b[j];
-					i++;
-					j++;
-				break;
-				case Levenshtein::TOP :
-					x[k] = '-';
-					y[k] = b[j];
-					j++;
-				break;
-				case Levenshtein::LEFT :
-					x[k] = a[i];
-					y[k] = '-';
-					i++;
-				break;
-			}
-			action.pop();
-			k++;
-		}
 
 
-		for (int z = 0; z < stringOutputSize; z++) {
-			std::cout << x[z];
-		}
-		std::cout << std::endl;
-		for (int z = 0; z < stringOutputSize; z++) {
-			std::cout << y[z];
-		}
-		std::cout << std::endl;
-	}
-
-	int Computer::GetLevenshteinDistance ( )
+	int Computer::Distance ( )
 	{
 		if ( ! distanceComputed )
 		{
 			computeScoreAndBacktrack();
 		}
 		return scoreBack[WIDTH-1][HEIGHT-1].score;
+	}
+
+//--------------------------CONSTRUCTORS AND DESTRUCTORS------------------------
+
+	// Constructor
+	//	first : first string to be copied in the class's attributes
+	//	second : second string to be copied in the class's attributes
+	Computer::Computer (const std::string& first, const std::string& second) :
+		a (first), b (second), WIDTH (a.length() + 1), HEIGHT (b.length() + 1)
+	{
+		scoreBack = new Levenshtein::ScoreBack * [ WIDTH ];	//Score matrix
+		for (int i = 0; i < WIDTH; i++)
+		{
+			scoreBack [ i ] = new ScoreBack [ HEIGHT ];
+		}
+		scoreBack [0][0].score = 0;
+		scoreBack [0][0].back = ROOT;
+	}
+
+	// Destructor
+	Computer::~Computer ( )
+	{
+		if ( distanceComputed )
+		{
+			for (int i = 0; i < WIDTH; i++)
+			{
+				delete[] scoreBack [ i ];
+			}
+			delete[] scoreBack;
+		}
+		if ( alignmentComputed )
+		{
+			delete firstAlignedString;
+			delete secondAlignedString;
+		}
 	}
 }
