@@ -30,7 +30,7 @@ else
 	exit 2
 fi
 
-
+echo "$sRun"
 eval "$sRun"
 
 returnCode=$?
