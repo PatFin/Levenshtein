@@ -30,26 +30,9 @@ else
 	exit 2
 fi
 
-#stdin specified
-if [ -r "std.in" ]
-then 
-	sRun="$sRun <std.in"
-fi
 
-#stdout specified
-if [ -r "stdout" ]
-then
-	sRun="sRun > temp.txt"
-fi
+eval "$sRun"
 
-#stderr specified
-if [ -r "stderr.out" ]
-then 
-	sRun="$sRun 2>temperr.txt"
-fi
-
-echo $sRun
-eval $sRun
 returnCode=$?
 
 resultGlobal=1
@@ -59,9 +42,10 @@ resultGlobal=1
 resultOut=2
 if [ -r "std.out" ]
 then
+	touch temp.txt
 	diff -wB temp.txt std.out >/dev/null
 	if [ $? -eq 0 ]
-	then 
+	then
 		echo "STDOUT : Passed"
 		resultOut=1
 	else
@@ -73,10 +57,11 @@ then
 fi
 
 if [ -r "stderr.out" ]
-then 
+then
+	touch temperr.txt
 	diff -wB temperr.txt stderr.out >/dev/null
 	if [ $? -eq 0 ]
-	then 
+	then
 		echo "STDERR : Passed"
 		resultOut=1
 	else
@@ -96,10 +81,11 @@ else
 	echo "GLOBAL : Passed"
 fi
 
+exit
 #Write to the csv file provided
-cd $execDir
+cd ..
 if [ ! -w "$2" ]
-then 
+then
 	touch $2
 fi
 if [ -w "$2" ]

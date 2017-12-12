@@ -1,1 +1,1 @@
-../../bin/Levenshtein.exe
+./../../bin/Levenshtein.exe < std.in > temp.txt 2> temperr.txt
