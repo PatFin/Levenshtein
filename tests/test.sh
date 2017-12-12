@@ -33,11 +33,7 @@ fi
 echo "$sRun"
 eval "$sRun"
 
-returnCode=$?
-
 resultGlobal=1
-
-#Could compare return code
 
 resultOut=2
 if [ -r "std.out" ]
@@ -81,7 +77,7 @@ else
 	echo "GLOBAL : Passed"
 fi
 
-exit
+exit $resultGlobal
 #Write to the csv file provided
 cd ..
 if [ ! -w "$2" ]
